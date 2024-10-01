@@ -1,15 +1,19 @@
-# Use a base image that supports gcloud
-FROM ubuntu:20.04
+# Use the official Nginx base image
+FROM nginx:alpine
 
-# Install required packages
-RUN apt-get update && \
-    apt-get install -y curl apt-transport-https gnupg && \
-    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" \
-    > /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
-    apt-get update && \
-    apt-get install -y google-cloud-sdk && \
-    apt-get clean
+# Install required packages for gcloud
+RUN apk add --no-cache \
+    curl \
+    bash \
+    python3 \
+    py3-pip \
+    && pip3 install --upgrade pip setuptools \
+    && curl -sSL https://sdk.cloud.google.com | bash \
+    && echo "source /root/google-cloud-sdk/path.bash.inc" >> /root/.bashrc \
+    && echo "source /root/google-cloud-sdk/completion.bash.inc" >> /root/.bashrc
+
+# Expose port 80
+EXPOSE 80
 
 # Set the default command
-CMD ["/bin/bash"]
+CMD ["nginx", "-g", "daemon off;"]
